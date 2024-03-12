@@ -4,6 +4,7 @@ metadata:
   title: Quarkus Application on Openshift
   description: Quarkus Application template with build tasks for Jenkins
   type: service
+  name: quarkus-template # Add the 'name' property
 spec:
   owner: jeeva-anbumani
   system: janus-idp
