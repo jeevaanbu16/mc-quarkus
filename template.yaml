@@ -1,0 +1,74 @@
+apiVersion: backstage.io/v1beta1
+kind: Template
+metadata:
+  title: Quarkus Application on Openshift
+  description: Quarkus Application template with build tasks for Jenkins
+  type: service
+spec:
+  owner: jeeva-anbumani
+  system: janus-idp
+  typeId: middleware
+  id: quarkus
+  docPath: README.md
+
+  features:
+  - id: build
+    type: build
+    description: Build
+    processingSequence: 1
+    repositoryRequired: false
+    buildPlanRequired: false
+    data:
+      useDefault: true
+      namespace: " "
+      mavenGoal: "clean package"
+    tasks:
+    - id: reecetech
+      type: reecetech
+      url: "string"
+      image: "script:reecetech.sh"
+      files:
+        preprocess:
+          append: []
+          replace:
+          - "Jenkinsfile"
+        postprocess:
+          append: []
+          replace: []
+
+  - id: quarkus
+    type: quarkus
+    description: Application
+    processingSequence: 2
+    nameGeneration:
+      repository: "[=application.appId]"
+    repositoryRequired: true
+    buildPlanRequired: true
+    data:
+      useDefaultConfig: true
+    tasks:
+    - id: quarkus-sonarqube
+      type: quarkus-sonarqube
+      url: "string"
+      image: "script:sonarqube.sh"
+      files:
+        preprocess:
+          append: []
+          replace: []
+        postprocess:
+          append: []
+          replace: []
+
+    - id: quarkus
+      type: scaffold
+      url: "string"
+      image: "script:scaffold-quarkus-app.sh"
+      files:
+        preprocess:
+          append: []
+          replace: []
+        postprocess:
+          append:
+          - "src/main/resources/application.properties"
+          - "src/main/helm/values.yaml"
+          replace: []

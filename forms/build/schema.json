@@ -1,0 +1,16 @@
+{
+    "type": "object",
+    "properties": {
+        "useDefault": {
+            "type": "boolean"
+        },
+        "mavenGoal": {
+            "type": "string",
+            "description": "Maven Goal"
+        },
+        "namespace" : {
+            "type" : "string",
+            "description" : "namespace/project for openshift"
+        }
+    }
+}

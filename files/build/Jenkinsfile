@@ -1,0 +1,88 @@
+pipeline {
+    agent any
+
+    environment {
+        JDK_VERSION = 'JDK 17 (LTS)'
+        MAVEN_VERSION = 'Maven 3 (LTS)'
+        DOCKER_HOST = 'your-docker-registry'  // Update with your Docker registry
+        SONAR_URL = 'your-sonar-url'          // Update with your SonarQube URL
+        SONAR_LOGIN = 'your-sonar-token'      // Update with your SonarQube token
+        IQ_POLICY_STAGE_TYPE_ID = 'build'
+        IQ_POLICY_SCAN_TARGETS = 'target/quarkus-app/lib/**/*.jar'
+        DOCKER_USERNAME = 'your-docker-username'  // Update with your Docker registry username
+        DOCKER_PASSWORD = 'your-docker-password'  // Update with your Docker registry password
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                script {
+                    BRANCH = env.BRANCH_NAME.split('/')[0]
+                    CM = env.BRANCH_NAME.split('/')[1]
+                    APPVERSION = sh(script: 'grep \'"version"\' pricing-run-module/src/main/resources/appVersion.json | cut -d : -f2 | awk -F\'"\' \'{print $2}\'', returnStdout: true).trim()
+                    BUILD_TAG = "${BRANCH}-${CM}-${APPVERSION}-${env.BUILD_NUMBER}"
+                    writeFile file: 'buildvariables.txt', text: "image_tag=${BUILD_TAG}\nbranch_name=${env.BRANCH_NAME}"
+                }
+            }
+        }
+
+        stage('Maven Build') {
+            steps {
+                script {
+                    def mvnHome = tool 'Maven'
+                    def jdkHome = tool JDK_VERSION
+                    sh "${mvnHome}/bin/mvn clean package -P build-all -DskipTests"
+                }
+            }
+        }
+
+        stage('SonarQube Scan') {
+            steps {
+                script {
+                    if (env.CHANGE_TARGET == 'true') {
+                        sh "${MAVEN_VERSION}/bin/mvn sonar:sonar -Dsonar.projectKey=${env.JOB_BASE_NAME} -Dsonar.host.url=${SONAR_URL} -Dsonar.login=${SONAR_LOGIN} -Dsonar.projectName=${env.JOB_BASE_NAME} -Dsonar.pullrequest.key=${env.CHANGE_ID} -Dsonar.pullrequest.branch=${env.CHANGE_BRANCH} -Dsonar.pullrequest.base=${env.CHANGE_TARGET_BRANCH}"
+                    } else {
+                        sh "${MAVEN_VERSION}/bin/mvn sonar:sonar -Dsonar.projectKey=${env.JOB_BASE_NAME} -Dsonar.host.url=${SONAR_URL} -Dsonar.login=${SONAR_LOGIN} -Dsonar.branch.name=${env.BRANCH_NAME} -Dsonar.projectName=${env.JOB_BASE_NAME}"
+                    }
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                script {
+                    sh 'cp src/main/docker/Dockerfile.jvm Dockerfile'
+                    sh "${MAVEN_VERSION}/bin/mvn clean package -P build-all -DskipTests"
+                    docker.build("${DOCKER_HOST}/${env.JOB_BASE_NAME}:${BUILD_TAG}", "--build-arg PROXY_HOST=ci00.mclaneco.com --build-arg PROXY_PORT=3128 --build-arg NO_PROXY=\"*.mclaneco.com,*local*\" --build-arg HTTP_PROXY=\"ci00.mclaneco.com:3128\"  --build-arg HTTPS_PROXY=\"ci00.mclaneco.com:3128\"")
+                }
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                        docker.withRegistry("${DOCKER_HOST}", "${DOCKER_USERNAME}", "${DOCKER_PASSWORD}") {
+                            dockerImage.push("${env.JOB_BASE_NAME}:${BUILD_TAG}")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            // Additional post-build actions on success
+        }
+        failure {
+            // Additional actions on failure
+        }
+    }
+}

@@ -1,0 +1,40 @@
+{
+            "type": "VerticalLayout",
+            "elements": [
+
+                {
+                    "type": "Control",
+                    "label": "Use Default",
+                    "scope": "#/properties/useDefault",
+                    "rule": {
+                        "effect": "ENABLE",
+                        "condition": {
+                            "scope": "#/properties/useDefault",
+                            "schema": {
+                                "const": false
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "VerticalLayout",
+                    "elements": [
+                        {
+                            "type": "Control",
+                            "label": "Maven Goal",
+                            "scope": "#/properties/mavenGoal"
+                        }
+                    ],
+                    "rule": {
+                        "effect": "HIDE",
+                        "condition": {
+                            "scope": "#/properties/useDefault",
+                            "schema": {
+                                "const": true
+                            }
+                        }
+                    }
+                }
+            ]
+
+}

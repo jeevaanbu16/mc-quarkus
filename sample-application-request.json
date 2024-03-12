@@ -1,0 +1,179 @@
+{
+    "name": "A Multi-Repo Test Application",
+    "template": {
+        "typeId": "middleware",
+        "id": "quarkus-web-service",
+        "features": [
+            {
+                "id": "quarkus-web-service-cicd",
+                "description": "Quarkus Build",
+                "type": "cicd",
+                "repositoryProjectKey": "SANDBOX",
+                "data": {
+                    "useDefault": true,
+                    "namespace": " ",
+                    "apiType" : "exp",
+                    "mavenGoal": "clean package"
+                },
+                "tasks": [
+                    {
+                        "id": "quarkus-sonarqube",
+                        "description": null,
+                        "type": "quarkus-sonarqube",
+                        "url": "string",
+                        "image": "script:sonarqube.sh",
+                        "files": {
+                            "preprocess": {
+                                "append": [],
+                                "replace": []
+                            },
+                            "postprocess": {
+                                "append": [],
+                                "replace": []
+                            }
+                        },
+                        "dateCompleted": null
+                    },
+                    {
+                        "id": "reecetech",
+                        "description": null,
+                        "type": "reecetech",
+                        "url": "string",
+                        "image": "script:reecetech.sh",
+                        "files": {
+                            "preprocess": {
+                                "append": [],
+                                "replace": [
+                                    "build.yaml"
+                                ]
+                            },
+                            "postprocess": {
+                                "append": [],
+                                "replace": []
+                            }
+                        },
+                        "dateCompleted": null
+                    }
+                ],
+                "requiredFeatures": [
+                    "quarkus-web-service-scaffold"
+                ],
+                "form": {
+                    "id": "quarkus-cicd-form",
+                    "description": "Additional Build Configuration",
+                    "urls": {
+                        "schema": "templates/quarkus-web-service/features/quarkus-web-service-cicd/forms/schema",
+                        "uiSchema": "templates/quarkus-web-service/features/quarkus-web-service-cicd/forms/uischema"
+                    }
+                },
+                "processingSequence": 1
+            },
+            {
+                "id": "quarkus-web-service-scaffold",
+                "description": "Quarkus Application Scaffolding",
+                "type": "scaffold",
+                "repositoryProjectKey": "ATC",
+                "data": {
+                    "useDefaultConfig": true
+                },
+                "tasks": [
+                    {
+                        "id": "quarkus-scaffold",
+                        "description": null,
+                        "type": "quarkus-scaffold",
+                        "url": "string",
+                        "image": "script:scaffold-quarkus-app.sh",
+                        "files": {
+                            "preprocess": {
+                                "append": [],
+                                "replace": []
+                            },
+                            "postprocess": {
+                                "append": [
+                                    "src/main/resources/application.properties",
+                                    "src/main/helm/values.yaml"
+                                ],
+                                "replace": []
+                            }
+                        },
+                        "dateCompleted": null
+                    }
+                ],
+                "requiredFeatures": [],
+                "form": {
+                    "id": "quarkus-app-form",
+                    "description": "Quarkus Application Configuration",
+                    "urls": {
+                        "schema": "templates/quarkus-web-service/features/quarkus-web-service-scaffold/forms/schema",
+                        "uiSchema": "templates/quarkus-web-service/features/quarkus-web-service-scaffold/forms/uischema"
+                    }
+                },
+                "processingSequence": 2
+            },
+            {
+                "id": "quarkus-web-service-deploy",
+                "description": "Quarkus deploy",
+                "type": "deploy",
+                "repositoryProjectKey": "SANDBOX",
+                "data": {
+                    "useDefault": true,
+                    "namespace": " ",
+                    "mavenGoal": "clean package"
+                },
+                "tasks": [
+                    {
+                        "id": "reecetech",
+                        "description": null,
+                        "type": "reecetech",
+                        "url": "string",
+                        "image": "script:reecetech.sh",
+                        "files": {
+                            "preprocess": {
+                                "append": [],
+                                "replace": [
+                                    "deploy.yaml",
+                                    "permissions.yaml"
+                                ]
+                            },
+                            "postprocess": {
+                                "append": [],
+                                "replace": []
+                            }
+                        },
+                        "dateCompleted": null
+                    },
+                    {
+                        "id": "quarkus-jira-ticket",
+                        "description": null,
+                        "type": "quarkus-jira-ticket",
+                        "url": "string",
+                        "image": "script:jira-ticket.sh",
+                        "files": {
+                            "preprocess": {
+                                "append": [],
+                                "replace": []
+                            },
+                            "postprocess": {
+                                "append": [],
+                                "replace": []
+                            }
+                        },
+                        "dateCompleted": null
+                    }
+                ],
+                "requiredFeatures": [
+                    "TODO"
+                ],
+                "form": {
+                    "id": "quarkus-deploy-form",
+                    "description": "Additional Build Configuration",
+                    "urls": {
+                        "schema": null,
+                        "uiSchema": null
+                    }
+                },
+                "processingSequence": 3
+            }
+        ]
+    }
+}
